@@ -7,6 +7,31 @@ const errorEl = document.getElementById('error')
 const themeSelect = document.getElementById('theme-select')
 const shareBtn = document.getElementById('share-btn')
 
+const DEFAULT_THEME = 'github-light'
+
+const LIGHT_THEMES = new Set([
+  'zinc-light', 'tokyo-night-light', 'catppuccin-latte',
+  'nord-light', 'github-light', 'solarized-light',
+])
+
+function applyPageTheme(themeName) {
+  const isLight = LIGHT_THEMES.has(themeName)
+  const root = document.documentElement.style
+  if (isLight) {
+    root.setProperty('--bg', '#ffffff')
+    root.setProperty('--fg', '#27272a')
+    root.setProperty('--surface', '#f4f4f5')
+    root.setProperty('--border', '#d4d4d8')
+    root.setProperty('--accent', '#0969da')
+  } else {
+    root.setProperty('--bg', '#1a1b26')
+    root.setProperty('--fg', '#a9b1d6')
+    root.setProperty('--surface', '#24283b')
+    root.setProperty('--border', '#3d59a1')
+    root.setProperty('--accent', '#7aa2f7')
+  }
+}
+
 const DEFAULT_DIAGRAM = `graph TD
     A[Start] --> B{Decision}
     B -->|Yes| C[Process]
@@ -47,13 +72,13 @@ function loadFromHash() {
 function updateHash(code, themeName) {
   const params = new URLSearchParams()
   params.set('c', encode(code))
-  if (themeName !== 'tokyo-night') params.set('t', themeName)
+  if (themeName !== DEFAULT_THEME) params.set('t', themeName)
   window.location.hash = params.toString()
 }
 
 // --- Theme setup ---
 
-let currentThemeName = 'tokyo-night'
+let currentThemeName = DEFAULT_THEME
 
 const themeNames = Object.keys(THEMES).sort()
 themeNames.forEach(name => {
@@ -103,6 +128,7 @@ editor.addEventListener('input', () => {
 
 themeSelect.addEventListener('change', () => {
   currentThemeName = themeSelect.value
+  applyPageTheme(currentThemeName)
   render()
   updateHash(editor.value, currentThemeName)
 })
@@ -128,6 +154,7 @@ window.addEventListener('hashchange', () => {
       currentThemeName = state.theme
       themeSelect.value = currentThemeName
     }
+    applyPageTheme(currentThemeName)
     render()
   }
 })
@@ -145,4 +172,5 @@ if (state?.code) {
   editor.value = DEFAULT_DIAGRAM
 }
 
+applyPageTheme(currentThemeName)
 render()
