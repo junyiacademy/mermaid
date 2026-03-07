@@ -166,11 +166,23 @@ const resizeHandle = document.getElementById('resize-handle')
 const collapseBtn = document.getElementById('collapse-btn')
 let isCollapsed = false
 
-collapseBtn.addEventListener('click', (e) => {
-  e.stopPropagation()
-  isCollapsed = !isCollapsed
+const mobileToggle = document.getElementById('mobile-toggle')
+
+function setCollapsed(collapsed) {
+  isCollapsed = collapsed
   editorPane.classList.toggle('collapsed', isCollapsed)
   collapseBtn.textContent = isCollapsed ? '\u203A' : '\u2039'
+  mobileToggle.classList.toggle('active', !isCollapsed)
+  mobileToggle.textContent = isCollapsed ? 'Code' : 'Diagram'
+}
+
+collapseBtn.addEventListener('click', (e) => {
+  e.stopPropagation()
+  setCollapsed(!isCollapsed)
+})
+
+mobileToggle.addEventListener('click', () => {
+  setCollapsed(!isCollapsed)
 })
 
 resizeHandle.addEventListener('mousedown', (e) => {

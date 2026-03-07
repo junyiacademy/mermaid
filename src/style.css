@@ -200,6 +200,10 @@ textarea::placeholder {
   background: #9ece6a !important;
 }
 
+.mobile-toggle {
+  display: none;
+}
+
 @media (max-width: 768px) {
   main {
     flex-direction: column;
@@ -210,9 +214,31 @@ textarea::placeholder {
     height: 40%;
     border-right: none;
     border-bottom: 1px solid var(--border);
+    transition: height 0.2s ease;
+  }
+
+  .editor-pane.collapsed {
+    height: 0 !important;
+    width: 100% !important;
+    border-bottom: none;
   }
 
   .resize-handle {
     display: none;
+  }
+
+  .mobile-toggle {
+    display: inline-block;
+    font-size: 12px;
+    padding: 4px 10px;
+    background: var(--surface);
+    color: var(--fg);
+    border: 1px solid var(--border);
+  }
+
+  .mobile-toggle.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
   }
 }
