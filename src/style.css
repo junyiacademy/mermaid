@@ -91,9 +91,63 @@ main {
 
 .editor-pane {
   width: 40%;
+  min-width: 0;
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
+  transition: width 0.2s ease;
+}
+
+.editor-pane.collapsed {
+  width: 0 !important;
+  border-right: none;
+  overflow: hidden;
+}
+
+.resize-handle {
+  width: 6px;
+  cursor: col-resize;
+  background: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  transition: background 0.15s;
+}
+
+.resize-handle:hover {
+  background: var(--accent);
+}
+
+.collapse-btn {
+  position: absolute;
+  width: 20px;
+  height: 40px;
+  padding: 0;
+  border-radius: 0 4px 4px 0;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  left: 3px;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.resize-handle:hover .collapse-btn,
+.collapse-btn:focus {
+  opacity: 1;
+}
+
+.editor-pane.collapsed ~ .resize-handle {
+  cursor: default;
+}
+
+.editor-pane.collapsed ~ .resize-handle .collapse-btn {
+  opacity: 1;
 }
 
 textarea {
@@ -152,9 +206,13 @@ textarea::placeholder {
   }
 
   .editor-pane {
-    width: 100%;
+    width: 100% !important;
     height: 40%;
     border-right: none;
     border-bottom: 1px solid var(--border);
+  }
+
+  .resize-handle {
+    display: none;
   }
 }

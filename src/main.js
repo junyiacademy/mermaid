@@ -159,6 +159,45 @@ window.addEventListener('hashchange', () => {
   }
 })
 
+// --- Resize / Collapse ---
+
+const editorPane = document.getElementById('editor-pane')
+const resizeHandle = document.getElementById('resize-handle')
+const collapseBtn = document.getElementById('collapse-btn')
+let isCollapsed = false
+
+collapseBtn.addEventListener('click', (e) => {
+  e.stopPropagation()
+  isCollapsed = !isCollapsed
+  editorPane.classList.toggle('collapsed', isCollapsed)
+  collapseBtn.textContent = isCollapsed ? '\u203A' : '\u2039'
+})
+
+resizeHandle.addEventListener('mousedown', (e) => {
+  if (isCollapsed) return
+  e.preventDefault()
+  const startX = e.clientX
+  const startWidth = editorPane.offsetWidth
+  const mainWidth = editorPane.parentElement.offsetWidth
+
+  editorPane.style.transition = 'none'
+
+  const onMouseMove = (e) => {
+    const delta = e.clientX - startX
+    const newWidth = Math.max(100, Math.min(mainWidth - 100, startWidth + delta))
+    editorPane.style.width = (newWidth / mainWidth * 100) + '%'
+  }
+
+  const onMouseUp = () => {
+    editorPane.style.transition = ''
+    document.removeEventListener('mousemove', onMouseMove)
+    document.removeEventListener('mouseup', onMouseUp)
+  }
+
+  document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('mouseup', onMouseUp)
+})
+
 // --- Init ---
 
 const state = loadFromHash()
