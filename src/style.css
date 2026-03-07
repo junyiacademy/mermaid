@@ -205,6 +205,38 @@ textarea::placeholder {
 }
 
 @media (max-width: 768px) {
+  header {
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    gap: 6px;
+  }
+
+  header h1 {
+    font-size: 14px;
+  }
+
+  .controls {
+    gap: 6px;
+  }
+
+  .controls label {
+    display: none;
+  }
+
+  .controls select {
+    padding: 4px 6px;
+    font-size: 12px;
+  }
+
+  .controls button {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  #share-btn {
+    display: none;
+  }
+
   main {
     flex-direction: column;
   }
