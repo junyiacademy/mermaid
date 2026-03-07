@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mermaid Diagram Viewer</title>
+  <script type="module" crossorigin src="/mermaid/assets/index-DzAFYjdh.js"></script>
+  <link rel="stylesheet" crossorigin href="/mermaid/assets/index-quBZghvl.css">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>Mermaid Diagram Viewer</h1>
+      <div class="controls">
+        <label for="theme-select">Theme</label>
+        <select id="theme-select"></select>
+        <button id="share-btn">Copy Share Link</button>
+        <button id="mobile-toggle" class="mobile-toggle" title="Toggle editor">Code</button>
+      </div>
+    </header>
+    <main>
+      <div class="editor-pane" id="editor-pane">
+        <textarea id="editor" spellcheck="false" placeholder="Enter Mermaid syntax here..."></textarea>
+      </div>
+      <div class="resize-handle" id="resize-handle">
+        <button class="collapse-btn" id="collapse-btn" title="Toggle editor">&lsaquo;</button>
+      </div>
+      <div class="preview-pane">
+        <div id="preview"></div>
+        <div id="error" class="error" hidden></div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
