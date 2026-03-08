@@ -172,20 +172,16 @@ textarea::placeholder {
 .preview-pane {
   flex: 1;
   overflow: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 20px;
 }
 
 #preview {
-  max-width: 100%;
-  max-height: 100%;
+  margin: auto;
+  width: fit-content;
 }
 
 #preview svg {
-  max-width: 100%;
-  height: auto;
+  display: block;
 }
 
 .error {
