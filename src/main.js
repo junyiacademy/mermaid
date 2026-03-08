@@ -48,24 +48,48 @@ function encode(text) {
     .replace(/=+$/, '')
 }
 
-function decode(encoded) {
+function decodeBase64Url(encoded) {
   const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/')
   const binary = atob(base64)
-  const bytes = Uint8Array.from(binary, c => c.charCodeAt(0))
-  return new TextDecoder().decode(inflate(bytes))
+  return Uint8Array.from(binary, c => c.charCodeAt(0))
+}
+
+function decode(encoded) {
+  const bytes = decodeBase64Url(encoded)
+
+  // Try pako inflate (zlib format — our default encoding)
+  try {
+    return new TextDecoder().decode(inflate(bytes))
+  } catch { /* not zlib */ }
+
+  // Try plain base64 (no compression)
+  const text = new TextDecoder().decode(bytes)
+  if (/^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|xychart)/m.test(text)) {
+    return text
+  }
+
+  // Try decoding as URI-encoded plain text
+  try {
+    const decoded = decodeURIComponent(text)
+    if (/^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|xychart)/m.test(decoded)) {
+      return decoded
+    }
+  } catch { /* not URI-encoded */ }
+
+  throw new Error('Unable to decode diagram from URL. The link may use an unsupported encoding format.')
 }
 
 function loadFromHash() {
   const hash = window.location.hash.slice(1)
-  if (!hash) return null
+  if (!hash) return { code: null, theme: null, error: null }
   try {
     const params = new URLSearchParams(hash)
-    return {
-      code: params.get('c') ? decode(params.get('c')) : null,
-      theme: params.get('t') || null,
-    }
-  } catch {
-    return null
+    const theme = params.get('t') || null
+    const encoded = params.get('c')
+    if (!encoded) return { code: null, theme, error: null }
+    return { code: decode(encoded), theme, error: null }
+  } catch (err) {
+    return { code: null, theme: null, error: err.message }
   }
 }
 
@@ -148,8 +172,14 @@ shareBtn.addEventListener('click', () => {
 // Handle browser back/forward
 window.addEventListener('hashchange', () => {
   const state = loadFromHash()
-  if (state?.code) {
+  if (state.error) {
+    editor.value = ''
+    preview.replaceChildren()
+    errorEl.textContent = state.error
+    errorEl.hidden = false
+  } else if (state.code) {
     editor.value = state.code
+    errorEl.hidden = true
     if (state.theme && THEMES[state.theme]) {
       currentThemeName = state.theme
       themeSelect.value = currentThemeName
@@ -213,7 +243,11 @@ resizeHandle.addEventListener('mousedown', (e) => {
 // --- Init ---
 
 const state = loadFromHash()
-if (state?.code) {
+if (state.error) {
+  editor.value = ''
+  errorEl.textContent = state.error
+  errorEl.hidden = false
+} else if (state.code) {
   editor.value = state.code
   if (state.theme && THEMES[state.theme]) {
     currentThemeName = state.theme
