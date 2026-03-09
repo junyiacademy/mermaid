@@ -11,7 +11,7 @@ const downloadSvgBtn = document.getElementById('download-svg-btn')
 const copyAsciiBtn = document.getElementById('copy-ascii-btn')
 const notesPanel = document.getElementById('notes-panel')
 const notesContent = document.getElementById('notes-content')
-const notesToggleBtn = document.getElementById('notes-toggle-btn')
+
 
 let renderMode = 'svg' // 'svg' or 'ascii'
 
@@ -236,6 +236,8 @@ function displayNotes(notes) {
   }
   notesPanel.hidden = false
   notesPanel.classList.remove('collapsed')
+  notesPanel.style.maxHeight = ''
+  notesPanel.style.height = ''
   // Safe: renderMarkdown escapes all HTML first via escapeHtml(),
   // then only adds whitelisted tags (h2, p, ul, li, table, strong, code, pre).
   notesContent.innerHTML = renderMarkdown(notes)
@@ -373,61 +375,141 @@ window.addEventListener('hashchange', () => {
   }
 })
 
-// --- Resize / Collapse ---
+// --- Panel Toggle / Resize ---
 
-const editorPane = document.getElementById('editor-pane')
-const resizeHandle = document.getElementById('resize-handle')
-const collapseBtn = document.getElementById('collapse-btn')
-let isCollapsed = false
+const editorPanel = document.getElementById('editor-panel')
+const editorMobileToggle = document.getElementById('editor-mobile-toggle')
+const editorEdge = document.getElementById('editor-edge')
 
-const mobileToggle = document.getElementById('mobile-toggle')
+let editorCollapsed = false
 
-function setCollapsed(collapsed) {
-  isCollapsed = collapsed
-  editorPane.classList.toggle('collapsed', isCollapsed)
-  collapseBtn.textContent = isCollapsed ? '\u203A' : '\u2039'
-  mobileToggle.classList.toggle('active', !isCollapsed)
-  mobileToggle.textContent = isCollapsed ? 'Code' : 'Diagram'
+function setEditorCollapsed(collapsed) {
+  editorCollapsed = collapsed
+  editorPanel.classList.toggle('collapsed', collapsed)
 }
 
-collapseBtn.addEventListener('click', (e) => {
-  e.stopPropagation()
-  setCollapsed(!isCollapsed)
-})
+const notesMobileToggle = document.getElementById('notes-mobile-toggle')
+const notesEdge = document.getElementById('notes-edge')
 
-mobileToggle.addEventListener('click', () => {
-  setCollapsed(!isCollapsed)
-})
+// Edge/header bar: drag to resize, click to toggle
+// Supports both mouse and touch events
 
-resizeHandle.addEventListener('mousedown', (e) => {
-  if (isCollapsed) return
-  e.preventDefault()
-  const startX = e.clientX
-  const startWidth = editorPane.offsetWidth
-  const mainWidth = editorPane.parentElement.offsetWidth
-
-  editorPane.style.transition = 'none'
-
-  const onMouseMove = (e) => {
-    const delta = e.clientX - startX
-    const newWidth = Math.max(100, Math.min(mainWidth - 100, startWidth + delta))
-    editorPane.style.width = (newWidth / mainWidth * 100) + '%'
+function setupEdgeDrag(edge, { onDragStart, onDragMove, onDragEnd, onToggle }) {
+  function getXY(e) {
+    if (e.touches) return { x: e.touches[0].clientX, y: e.touches[0].clientY }
+    return { x: e.clientX, y: e.clientY }
   }
 
-  const onMouseUp = () => {
-    editorPane.style.transition = ''
-    document.removeEventListener('mousemove', onMouseMove)
-    document.removeEventListener('mouseup', onMouseUp)
+  function start(e) {
+    e.preventDefault()
+    let dragMoved = false
+    const startPos = getXY(e)
+    const dragState = onDragStart(startPos)
+    const isTouch = !!e.touches
+
+    const onMove = (e) => {
+      const pos = isTouch ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY }
+      if (!dragMoved && (Math.abs(pos.x - startPos.x) > 3 || Math.abs(pos.y - startPos.y) > 3)) {
+        dragMoved = true
+      }
+      if (dragMoved) onDragMove(pos, dragState)
+    }
+
+    const onEnd = () => {
+      if (!dragMoved) onToggle()
+      if (onDragEnd) onDragEnd()
+      document.removeEventListener(isTouch ? 'touchmove' : 'mousemove', onMove)
+      document.removeEventListener(isTouch ? 'touchend' : 'mouseup', onEnd)
+    }
+
+    document.addEventListener(isTouch ? 'touchmove' : 'mousemove', onMove, { passive: false })
+    document.addEventListener(isTouch ? 'touchend' : 'mouseup', onEnd)
   }
 
-  document.addEventListener('mousemove', onMouseMove)
-  document.addEventListener('mouseup', onMouseUp)
+  edge.addEventListener('mousedown', start)
+  edge.addEventListener('touchstart', start, { passive: false })
+}
+
+// Editor edge (desktop): drag to resize width, click to collapse
+setupEdgeDrag(editorEdge, {
+  onDragStart(pos) {
+    if (editorCollapsed) return {}
+    const startWidth = editorPanel.offsetWidth
+    const mainWidth = editorPanel.parentElement.offsetWidth
+    editorPanel.style.transition = 'none'
+    return { startX: pos.x, startWidth, mainWidth }
+  },
+  onDragMove(pos, s) {
+    if (editorCollapsed) return
+    const delta = pos.x - s.startX
+    const newWidth = Math.max(100, Math.min(s.mainWidth - 100, s.startWidth + delta))
+    editorPanel.style.width = (newWidth / s.mainWidth * 100) + '%'
+  },
+  onDragEnd() {
+    editorPanel.style.transition = ''
+  },
+  onToggle() {
+    setEditorCollapsed(!editorCollapsed)
+  },
 })
 
-// --- Notes toggle ---
+// Editor mobile header: drag to resize height, click to collapse
+setupEdgeDrag(editorMobileToggle.parentElement, {
+  onDragStart(pos) {
+    if (editorCollapsed) return {}
+    const editorBody = document.getElementById('editor-body')
+    const startHeight = editorBody.offsetHeight
+    return { startY: pos.y, startHeight, editorBody }
+  },
+  onDragMove(pos, s) {
+    if (editorCollapsed) return
+    const delta = pos.y - s.startY
+    const newHeight = Math.max(60, Math.min(window.innerHeight - 200, s.startHeight + delta))
+    s.editorBody.style.height = newHeight + 'px'
+  },
+  onToggle() {
+    setEditorCollapsed(!editorCollapsed)
+  },
+})
 
-notesToggleBtn.addEventListener('click', () => {
-  notesPanel.classList.toggle('collapsed')
+// Notes edge (desktop): drag to resize height, click to collapse
+setupEdgeDrag(notesEdge, {
+  onDragStart(pos) {
+    const startHeight = notesPanel.offsetHeight
+    const containerHeight = notesPanel.parentElement.offsetHeight
+    return { startY: pos.y, startHeight, containerHeight }
+  },
+  onDragMove(pos, s) {
+    const delta = s.startY - pos.y
+    const newHeight = Math.max(40, Math.min(s.containerHeight - 100, s.startHeight + delta))
+    notesPanel.style.maxHeight = newHeight + 'px'
+    notesPanel.style.height = newHeight + 'px'
+  },
+  onToggle() {
+    notesPanel.style.maxHeight = ''
+    notesPanel.style.height = ''
+    notesPanel.classList.toggle('collapsed')
+  },
+})
+
+// Notes mobile header: drag to resize height, click to collapse
+setupEdgeDrag(notesMobileToggle.parentElement, {
+  onDragStart(pos) {
+    const startHeight = notesPanel.offsetHeight
+    const containerHeight = notesPanel.parentElement.offsetHeight
+    return { startY: pos.y, startHeight, containerHeight }
+  },
+  onDragMove(pos, s) {
+    const delta = s.startY - pos.y
+    const newHeight = Math.max(40, Math.min(s.containerHeight - 100, s.startHeight + delta))
+    notesPanel.style.maxHeight = newHeight + 'px'
+    notesPanel.style.height = newHeight + 'px'
+  },
+  onToggle() {
+    notesPanel.style.maxHeight = ''
+    notesPanel.style.height = ''
+    notesPanel.classList.toggle('collapsed')
+  },
 })
 
 // --- Infinite canvas: drag to pan ---

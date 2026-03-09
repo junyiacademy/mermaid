@@ -17,15 +17,23 @@
         <button id="download-svg-btn">Download SVG</button>
         <button id="copy-ascii-btn" hidden>Copy ASCII</button>
         <button id="share-btn">Copy Share Link</button>
-        <button id="mobile-toggle" class="mobile-toggle" title="Toggle editor">Code</button>
       </div>
     </header>
     <main>
-      <div class="editor-pane" id="editor-pane">
-        <textarea id="editor" spellcheck="false" placeholder="Enter Mermaid syntax here..."></textarea>
-      </div>
-      <div class="resize-handle" id="resize-handle">
-        <button class="collapse-btn" id="collapse-btn" title="Toggle editor">&lsaquo;</button>
+      <div class="editor-panel" id="editor-panel">
+        <div class="panel-header editor-mobile-header">
+          <button class="panel-toggle-btn" id="editor-mobile-toggle">
+            <span class="panel-toggle-icon">&#9660;</span>
+            <span>Code</span>
+          </button>
+        </div>
+        <div class="editor-body" id="editor-body">
+          <textarea id="editor" spellcheck="false" placeholder="Enter Mermaid syntax here..."></textarea>
+        </div>
+        <div class="editor-edge" id="editor-edge" title="Drag to resize, click to toggle">
+          <span class="editor-edge-icon">&#9666;</span>
+          <span class="editor-edge-label">Code</span>
+        </div>
       </div>
       <div class="preview-container">
         <div class="preview-pane" id="preview-pane">
@@ -33,9 +41,13 @@
           <div id="error" class="error" hidden></div>
         </div>
         <div class="notes-panel" id="notes-panel" hidden>
-          <div class="notes-header">
-            <button class="notes-toggle-btn" id="notes-toggle-btn">
-              <span class="notes-toggle-icon">&#9660;</span>
+          <div class="notes-edge" id="notes-edge" title="Drag to resize, click to toggle">
+            <span class="notes-edge-icon">&#9650;</span>
+            <span class="notes-edge-label">Notes</span>
+          </div>
+          <div class="panel-header notes-mobile-header">
+            <button class="panel-toggle-btn" id="notes-mobile-toggle">
+              <span class="panel-toggle-icon">&#9660;</span>
               <span>Notes</span>
             </button>
           </div>

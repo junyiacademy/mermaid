@@ -89,65 +89,188 @@ main {
   min-height: 0;
 }
 
-.editor-pane {
+/* --- Editor Panel --- */
+
+.editor-panel {
   width: 40%;
   min-width: 0;
-  border-right: 1px solid var(--border);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   transition: width 0.2s ease;
 }
 
-.editor-pane.collapsed {
-  width: 0 !important;
-  border-right: none;
-  overflow: hidden;
+.editor-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
-.resize-handle {
-  width: 6px;
-  cursor: col-resize;
-  background: var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.editor-edge {
+  width: 28px;
   flex-shrink: 0;
-  position: relative;
-  transition: background 0.15s;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: col-resize;
+  transition: background 0.2s, border-color 0.2s;
+  user-select: none;
 }
 
-.resize-handle:hover {
-  background: var(--accent);
+.editor-edge:hover {
+  background: var(--border);
+  border-left-color: var(--accent);
 }
 
-.collapse-btn {
-  position: absolute;
-  width: 20px;
-  height: 40px;
-  padding: 0;
-  border-radius: 0 4px 4px 0;
-  font-size: 14px;
+.editor-edge::before {
+  content: '·\A·\A·';
+  white-space: pre;
+  font-size: 11px;
   line-height: 1;
+  color: var(--fg);
+  opacity: 0.25;
+  transition: opacity 0.2s;
+}
+
+.editor-edge:hover::before {
+  opacity: 0.5;
+}
+
+.editor-edge-label {
+  writing-mode: vertical-lr;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--fg);
+  opacity: 0.4;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.editor-edge:hover .editor-edge-label {
+  opacity: 0.9;
+  color: var(--accent);
+}
+
+.editor-edge-icon {
+  writing-mode: vertical-lr;
+  font-size: 8px;
+  color: var(--fg);
+  opacity: 0.3;
+  display: inline-block;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.editor-edge:hover .editor-edge-icon {
+  opacity: 0.8;
+}
+
+.editor-panel.collapsed .editor-edge-icon {
+  transform: rotate(180deg);
+}
+
+.editor-panel.collapsed {
+  width: auto !important;
+}
+
+.editor-panel.collapsed .editor-body {
+  display: none;
+}
+
+.editor-panel.collapsed .editor-edge {
+  border-left: none;
+  cursor: pointer;
+}
+
+.editor-panel.collapsed .editor-edge::before {
+  display: none;
+}
+
+/* --- Notes Panel --- */
+
+.notes-panel {
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  max-height: 50%;
+}
+
+.notes-edge {
+  height: 28px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-top: 2px solid var(--accent);
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  left: 3px;
-  z-index: 10;
-  opacity: 0;
-  transition: opacity 0.15s;
+  gap: 8px;
+  cursor: row-resize;
+  transition: background 0.2s, border-color 0.2s;
+  user-select: none;
 }
 
-.resize-handle:hover .collapse-btn,
-.collapse-btn:focus {
-  opacity: 1;
+.notes-edge:hover {
+  background: var(--border);
+  border-top-color: var(--accent);
 }
 
-.editor-pane.collapsed ~ .resize-handle {
-  cursor: default;
+.notes-edge::before {
+  content: '· · ·';
+  font-size: 11px;
+  line-height: 1;
+  color: var(--fg);
+  opacity: 0.25;
+  transition: opacity 0.2s;
 }
 
-.editor-pane.collapsed ~ .resize-handle .collapse-btn {
-  opacity: 1;
+.notes-edge:hover::before {
+  opacity: 0.5;
+}
+
+.notes-edge-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--fg);
+  opacity: 0.4;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.notes-edge:hover .notes-edge-label {
+  opacity: 0.9;
+  color: var(--accent);
+}
+
+.notes-edge-icon {
+  font-size: 8px;
+  color: var(--fg);
+  opacity: 0.3;
+  display: inline-block;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.notes-edge:hover .notes-edge-icon {
+  opacity: 0.8;
+}
+
+.notes-panel.collapsed .notes-edge-icon {
+  transform: rotate(180deg);
+}
+
+.notes-panel.collapsed .notes-edge::before {
+  display: none;
+}
+
+.notes-panel.collapsed .notes-content {
+  display: none;
 }
 
 textarea {
@@ -168,6 +291,8 @@ textarea::placeholder {
   color: var(--fg);
   opacity: 0.3;
 }
+
+/* --- Preview --- */
 
 .preview-container {
   flex: 1;
@@ -234,53 +359,7 @@ textarea::placeholder {
 
 .notes-panel {
   border-top: 2px solid var(--accent);
-  background: var(--surface);
-  display: flex;
-  flex-direction: column;
   max-height: 50%;
-  flex-shrink: 0;
-}
-
-.notes-panel.collapsed .notes-content {
-  display: none;
-}
-
-.notes-header {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.notes-toggle-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-  background: var(--surface);
-  color: var(--fg);
-  border: none;
-  border-radius: 0;
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.15s;
-}
-
-.notes-toggle-btn:hover {
-  background: var(--border);
-  opacity: 1;
-}
-
-.notes-toggle-icon {
-  font-size: 10px;
-  transition: transform 0.2s;
-  display: inline-block;
-}
-
-.notes-panel.collapsed .notes-toggle-icon {
-  transform: rotate(-90deg);
 }
 
 .notes-content {
@@ -357,8 +436,59 @@ textarea::placeholder {
   font-weight: 600;
 }
 
-.mobile-toggle {
+/* Shared panel header/toggle styles (used by notes + editor mobile header) */
+.panel-header {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Hidden on desktop, shown on mobile */
+.editor-mobile-header,
+.notes-mobile-header {
   display: none;
+}
+
+.panel-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: var(--surface);
+  color: var(--fg);
+  border: none;
+  border-radius: 0;
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s, color 0.2s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.panel-toggle-btn:hover {
+  background: var(--border);
+  opacity: 1;
+}
+
+.panel-toggle-btn:active {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.panel-toggle-icon {
+  font-size: 8px;
+  opacity: 0.5;
+  transition: transform 0.2s, opacity 0.2s;
+  display: inline-block;
+}
+
+.panel-toggle-btn:hover .panel-toggle-icon {
+  opacity: 1;
 }
 
 @media (max-width: 768px) {
@@ -398,41 +528,79 @@ textarea::placeholder {
     flex-direction: column;
   }
 
-  .editor-pane {
+  .editor-panel {
     width: 100% !important;
-    height: 40%;
+    height: auto;
     border-right: none;
     border-bottom: 1px solid var(--border);
-    transition: height 0.2s ease;
+    transition: none;
+    flex-direction: column;
   }
 
-  .editor-pane.collapsed {
-    height: 0 !important;
-    width: 100% !important;
-    border-bottom: none;
+  .editor-mobile-header {
+    display: flex;
+    order: 2;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    cursor: row-resize;
   }
 
-  .resize-handle {
+  .editor-mobile-header .panel-toggle-btn {
+    cursor: row-resize;
+  }
+
+  .editor-body {
+    order: 1;
+  }
+
+  .editor-edge {
     display: none;
   }
 
-  .mobile-toggle {
-    display: inline-block;
-    font-size: 12px;
-    padding: 4px 10px;
-    background: var(--surface);
-    color: var(--fg);
-    border: 1px solid var(--border);
+  .editor-body {
+    height: 200px;
+    flex: none;
   }
 
-  .mobile-toggle.active {
-    background: var(--accent);
-    color: var(--bg);
-    border-color: var(--accent);
+  .editor-panel.collapsed .editor-body {
+    display: none;
+  }
+
+  .editor-panel.collapsed .editor-mobile-header {
+    border-top: none;
+  }
+
+  .editor-panel.collapsed .panel-toggle-icon {
+    transform: rotate(-90deg);
+  }
+
+  .notes-edge {
+    display: none;
+  }
+
+  .notes-mobile-header {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    cursor: row-resize;
+  }
+
+  .notes-mobile-header .panel-toggle-btn {
+    cursor: row-resize;
+  }
+
+  .notes-panel.collapsed .notes-mobile-header {
+    border-bottom: none;
+  }
+
+  .notes-panel.collapsed .panel-toggle-icon {
+    transform: rotate(-90deg);
   }
 
   .notes-panel {
     max-height: 40%;
+    border-top: none;
   }
 
   .notes-content {
