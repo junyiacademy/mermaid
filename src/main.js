@@ -7,6 +7,8 @@ const errorEl = document.getElementById('error')
 const themeSelect = document.getElementById('theme-select')
 const shareBtn = document.getElementById('share-btn')
 const renderModeBtn = document.getElementById('render-mode-btn')
+const downloadSvgBtn = document.getElementById('download-svg-btn')
+const copyAsciiBtn = document.getElementById('copy-ascii-btn')
 const notesPanel = document.getElementById('notes-panel')
 const notesContent = document.getElementById('notes-content')
 const notesToggleBtn = document.getElementById('notes-toggle-btn')
@@ -294,11 +296,42 @@ editor.addEventListener('input', () => {
   }, 300)
 })
 
+function updateModeButtons() {
+  downloadSvgBtn.hidden = renderMode !== 'svg'
+  copyAsciiBtn.hidden = renderMode !== 'ascii'
+}
+
 renderModeBtn.addEventListener('click', () => {
   renderMode = renderMode === 'svg' ? 'ascii' : 'svg'
   renderModeBtn.textContent = renderMode.toUpperCase()
+  updateModeButtons()
   // Defer render so button text updates before potentially heavy ASCII render
   setTimeout(render, 0)
+})
+
+downloadSvgBtn.addEventListener('click', () => {
+  const svg = preview.querySelector('svg')
+  if (!svg) return
+  const blob = new Blob([svg.outerHTML], { type: 'image/svg+xml' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'diagram.svg'
+  a.click()
+  URL.revokeObjectURL(url)
+})
+
+copyAsciiBtn.addEventListener('click', () => {
+  const pre = preview.querySelector('.ascii-output')
+  if (!pre) return
+  navigator.clipboard.writeText(pre.textContent).then(() => {
+    copyAsciiBtn.textContent = 'Copied!'
+    copyAsciiBtn.classList.add('copied')
+    setTimeout(() => {
+      copyAsciiBtn.textContent = 'Copy ASCII'
+      copyAsciiBtn.classList.remove('copied')
+    }, 2000)
+  })
 })
 
 themeSelect.addEventListener('change', () => {
