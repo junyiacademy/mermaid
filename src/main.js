@@ -1,4 +1,4 @@
-import { renderMermaidSVG, THEMES } from 'beautiful-mermaid'
+import { renderMermaidSVG, renderMermaidASCII, THEMES } from 'beautiful-mermaid'
 import { deflate, inflate } from 'pako'
 
 const editor = document.getElementById('editor')
@@ -6,9 +6,12 @@ const preview = document.getElementById('preview')
 const errorEl = document.getElementById('error')
 const themeSelect = document.getElementById('theme-select')
 const shareBtn = document.getElementById('share-btn')
+const renderModeBtn = document.getElementById('render-mode-btn')
 const notesPanel = document.getElementById('notes-panel')
 const notesContent = document.getElementById('notes-content')
 const notesToggleBtn = document.getElementById('notes-toggle-btn')
+
+let renderMode = 'svg' // 'svg' or 'ascii'
 
 const DEFAULT_THEME = 'github-light'
 
@@ -253,13 +256,23 @@ function render() {
   displayNotes(notes)
 
   try {
-    const theme = THEMES[currentThemeName]
-    const svg = renderMermaidSVG(diagramCode, { ...theme, transparent: true })
-    const container = document.createElement('div')
-    container.innerHTML = svg
-    preview.replaceChildren(...container.childNodes)
-    errorEl.hidden = true
-    centerDiagram()
+    if (renderMode === 'ascii') {
+      const ascii = renderMermaidASCII(diagramCode, { colorMode: 'none' })
+      const pre = document.createElement('pre')
+      pre.className = 'ascii-output'
+      pre.textContent = ascii
+      preview.replaceChildren(pre)
+      errorEl.hidden = true
+      centerDiagram()
+    } else {
+      const theme = THEMES[currentThemeName]
+      const svg = renderMermaidSVG(diagramCode, { ...theme, transparent: true })
+      const container = document.createElement('div')
+      container.innerHTML = svg
+      preview.replaceChildren(...container.childNodes)
+      errorEl.hidden = true
+      centerDiagram()
+    }
   } catch (err) {
     preview.replaceChildren()
     errorEl.textContent = err.message
@@ -276,6 +289,12 @@ editor.addEventListener('input', () => {
     render()
     updateHash(editor.value, currentThemeName)
   }, 300)
+})
+
+renderModeBtn.addEventListener('click', () => {
+  renderMode = renderMode === 'svg' ? 'ascii' : 'svg'
+  renderModeBtn.textContent = renderMode.toUpperCase()
+  render()
 })
 
 themeSelect.addEventListener('change', () => {

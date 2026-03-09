@@ -7,6 +7,7 @@ A live Mermaid diagram editor and viewer powered by [beautiful-mermaid](https://
 ## Features
 
 - Live preview as you type
+- **SVG and ASCII output** — toggle between beautiful SVG diagrams and Unicode ASCII art
 - **Infinite canvas** — drag to pan, scroll wheel to zoom (cursor-anchored)
 - 15 themes from beautiful-mermaid with adaptive light/dark UI
 - URL-based sharing — diagram is compressed and encoded in the URL hash
