@@ -9,6 +9,7 @@ A live Mermaid diagram editor and viewer powered by [beautiful-mermaid](https://
 - Live preview as you type
 - 15 built-in themes (Tokyo Night, Catppuccin, Nord, Dracula, etc.)
 - URL-based sharing — diagram is compressed and encoded in the URL hash
+- **Notes panel** — embed text notes alongside diagrams using Mermaid comments
 - No backend required — everything runs client-side
 
 ## Example
@@ -24,6 +25,29 @@ graph TD
     E --> F[Open in Browser]
     C -->|No| G[Text Response]
 ```
+
+## Notes Panel
+
+You can embed text notes (insights, data tables, observations) alongside your diagram. Notes are written as Mermaid comments between `@notes` and `@end-notes` markers:
+
+```mermaid
+%% @notes
+%% ## Key Observations
+%% - Data flows through 3 layers before reaching the API response
+%% - Cache hit rate is critical for performance
+%%
+%% ## Data Sources
+%% | Source | Type | Role |
+%% |--------|------|------|
+%% | Datastore | NoSQL | Source of Truth |
+%% @end-notes
+
+graph TD
+    A[Request] --> B[Handler]
+    B --> C[Database]
+```
+
+The viewer extracts the notes block, renders it as formatted text in a collapsible panel below the diagram, and passes the remaining code to the Mermaid renderer. Notes support basic markdown: headers (`##`), bullet lists (`-`), bold (`**text**`), inline code (`` `code` ``), tables, and code blocks.
 
 ## Sharing Diagrams
 

@@ -24,9 +24,20 @@
       <div class="resize-handle" id="resize-handle">
         <button class="collapse-btn" id="collapse-btn" title="Toggle editor">&lsaquo;</button>
       </div>
-      <div class="preview-pane">
-        <div id="preview"></div>
-        <div id="error" class="error" hidden></div>
+      <div class="preview-container">
+        <div class="preview-pane" id="preview-pane">
+          <div id="preview"></div>
+          <div id="error" class="error" hidden></div>
+        </div>
+        <div class="notes-panel" id="notes-panel" hidden>
+          <div class="notes-header">
+            <button class="notes-toggle-btn" id="notes-toggle-btn">
+              <span class="notes-toggle-icon">&#9660;</span>
+              <span>Notes</span>
+            </button>
+          </div>
+          <div class="notes-content" id="notes-content"></div>
+        </div>
       </div>
     </main>
   </div>

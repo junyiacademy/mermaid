@@ -6,6 +6,9 @@ const preview = document.getElementById('preview')
 const errorEl = document.getElementById('error')
 const themeSelect = document.getElementById('theme-select')
 const shareBtn = document.getElementById('share-btn')
+const notesPanel = document.getElementById('notes-panel')
+const notesContent = document.getElementById('notes-content')
+const notesToggleBtn = document.getElementById('notes-toggle-btn')
 
 const DEFAULT_THEME = 'github-light'
 
@@ -113,6 +116,126 @@ themeNames.forEach(name => {
 })
 themeSelect.value = currentThemeName
 
+// --- Notes extraction ---
+
+function extractNotes(code) {
+  const notesRegex = /^%% @notes\s*\n([\s\S]*?)\n%% @end-notes\s*\n?/m
+  const match = code.match(notesRegex)
+  if (!match) return { diagramCode: code, notes: null }
+  const rawNotes = match[1]
+    .split('\n')
+    .map(line => line.replace(/^%% ?/, ''))
+    .join('\n')
+    .trim()
+  const diagramCode = code.replace(notesRegex, '').trim()
+  return { diagramCode, notes: rawNotes }
+}
+
+// --- Simple markdown to HTML ---
+// Security: escapeHtml() runs on all raw text BEFORE any tag insertion.
+// Only whitelisted tags (h2, p, ul, li, table, tr, th, td, strong, code, pre) are produced.
+
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+function renderInline(text) {
+  let html = escapeHtml(text)
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>')
+  return html
+}
+
+function renderMarkdown(text) {
+  const lines = text.split('\n')
+  const parts = []
+  let i = 0
+
+  while (i < lines.length) {
+    const line = lines[i]
+
+    // Code block
+    if (line.startsWith('```')) {
+      const codeLines = []
+      i++
+      while (i < lines.length && !lines[i].startsWith('```')) {
+        codeLines.push(escapeHtml(lines[i]))
+        i++
+      }
+      i++ // skip closing ```
+      parts.push(`<pre>${codeLines.join('\n')}</pre>`)
+      continue
+    }
+
+    // Headers
+    if (line.startsWith('## ')) {
+      parts.push(`<h2>${renderInline(line.slice(3))}</h2>`)
+      i++
+      continue
+    }
+
+    // Table
+    if (line.includes('|') && line.trim().startsWith('|')) {
+      const tableRows = []
+      while (i < lines.length && lines[i].includes('|') && lines[i].trim().startsWith('|')) {
+        tableRows.push(lines[i])
+        i++
+      }
+      const isSeparator = row => /^\|[\s\-:|]+\|$/.test(row.trim())
+      const dataRows = tableRows.filter(r => !isSeparator(r))
+      if (dataRows.length > 0) {
+        let tableHtml = '<table>'
+        dataRows.forEach((row, idx) => {
+          const cells = row.split('|').filter(c => c !== '').map(c => c.trim())
+          const tag = idx === 0 ? 'th' : 'td'
+          tableHtml += '<tr>' + cells.map(c => `<${tag}>${renderInline(c)}</${tag}>`).join('') + '</tr>'
+        })
+        tableHtml += '</table>'
+        parts.push(tableHtml)
+      }
+      continue
+    }
+
+    // Bullet list
+    if (line.match(/^\s*- /)) {
+      const items = []
+      while (i < lines.length && lines[i].match(/^\s*- /)) {
+        items.push(renderInline(lines[i].replace(/^\s*- /, '')))
+        i++
+      }
+      parts.push('<ul>' + items.map(item => `<li>${item}</li>`).join('') + '</ul>')
+      continue
+    }
+
+    // Empty line
+    if (line.trim() === '') {
+      i++
+      continue
+    }
+
+    // Paragraph
+    parts.push(`<p>${renderInline(line)}</p>`)
+    i++
+  }
+
+  return parts.join('\n')
+}
+
+function displayNotes(notes) {
+  if (!notes) {
+    notesPanel.hidden = true
+    return
+  }
+  notesPanel.hidden = false
+  notesPanel.classList.remove('collapsed')
+  // Safe: renderMarkdown escapes all HTML first via escapeHtml(),
+  // then only adds whitelisted tags (h2, p, ul, li, table, strong, code, pre).
+  notesContent.innerHTML = renderMarkdown(notes)
+}
+
 // --- Rendering ---
 // Note: renderMermaidSVG returns structured SVG from parsed Mermaid AST,
 // not raw user input. The library handles sanitization internally.
@@ -122,12 +245,16 @@ function render() {
   if (!code) {
     preview.replaceChildren()
     errorEl.hidden = true
+    displayNotes(null)
     return
   }
 
+  const { diagramCode, notes } = extractNotes(code)
+  displayNotes(notes)
+
   try {
     const theme = THEMES[currentThemeName]
-    const svg = renderMermaidSVG(code, { ...theme, transparent: true })
+    const svg = renderMermaidSVG(diagramCode, { ...theme, transparent: true })
     const container = document.createElement('div')
     container.innerHTML = svg
     preview.replaceChildren(...container.childNodes)
@@ -240,9 +367,15 @@ resizeHandle.addEventListener('mousedown', (e) => {
   document.addEventListener('mouseup', onMouseUp)
 })
 
+// --- Notes toggle ---
+
+notesToggleBtn.addEventListener('click', () => {
+  notesPanel.classList.toggle('collapsed')
+})
+
 // --- Drag to pan preview ---
 
-const previewPane = document.querySelector('.preview-pane')
+const previewPane = document.getElementById('preview-pane')
 let isDragging = false
 let dragStartX, dragStartY, scrollStartX, scrollStartY
 
