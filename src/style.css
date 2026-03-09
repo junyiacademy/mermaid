@@ -178,10 +178,10 @@ textarea::placeholder {
 
 .preview-pane {
   flex: 1;
-  overflow: auto;
-  padding: 20px;
+  overflow: hidden;
   cursor: grab;
   min-height: 0;
+  position: relative;
 }
 
 .preview-pane:active {
@@ -189,8 +189,8 @@ textarea::placeholder {
 }
 
 #preview {
-  margin: auto;
-  width: fit-content;
+  position: absolute;
+  transform-origin: 0 0;
 }
 
 #preview svg {

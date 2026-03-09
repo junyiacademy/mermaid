@@ -259,6 +259,7 @@ function render() {
     container.innerHTML = svg
     preview.replaceChildren(...container.childNodes)
     errorEl.hidden = true
+    centerDiagram()
   } catch (err) {
     preview.replaceChildren()
     errorEl.textContent = err.message
@@ -373,27 +374,44 @@ notesToggleBtn.addEventListener('click', () => {
   notesPanel.classList.toggle('collapsed')
 })
 
-// --- Drag to pan preview ---
+// --- Infinite canvas: drag to pan ---
 
 const previewPane = document.getElementById('preview-pane')
+let panX = 0, panY = 0
 let isDragging = false
-let dragStartX, dragStartY, scrollStartX, scrollStartY
+let dragStartX, dragStartY, panStartX, panStartY
+
+function applyTransform() {
+  preview.style.transform = `translate(${panX}px, ${panY}px)`
+}
+
+function centerDiagram() {
+  const svg = preview.querySelector('svg')
+  if (!svg) return
+  const paneRect = previewPane.getBoundingClientRect()
+  const svgW = svg.getBoundingClientRect().width
+  const svgH = svg.getBoundingClientRect().height
+  panX = (paneRect.width - svgW) / 2
+  panY = (paneRect.height - svgH) / 2
+  applyTransform()
+}
 
 previewPane.addEventListener('mousedown', (e) => {
   if (e.target.closest('a, button, select, textarea')) return
   isDragging = true
   dragStartX = e.clientX
   dragStartY = e.clientY
-  scrollStartX = previewPane.scrollLeft
-  scrollStartY = previewPane.scrollTop
+  panStartX = panX
+  panStartY = panY
   previewPane.style.cursor = 'grabbing'
   e.preventDefault()
 })
 
 document.addEventListener('mousemove', (e) => {
   if (!isDragging) return
-  previewPane.scrollLeft = scrollStartX - (e.clientX - dragStartX)
-  previewPane.scrollTop = scrollStartY - (e.clientY - dragStartY)
+  panX = panStartX + (e.clientX - dragStartX)
+  panY = panStartY + (e.clientY - dragStartY)
+  applyTransform()
 })
 
 document.addEventListener('mouseup', () => {
