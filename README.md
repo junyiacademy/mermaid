@@ -33,7 +33,7 @@ graph TD
 
 You can embed text notes (insights, data tables, observations) alongside your diagram. Notes are written as Mermaid comments between `@notes` and `@end-notes` markers:
 
-```mermaid
+```
 %% @notes
 %% ## Key Observations
 %% - Data flows through 3 layers before reaching the API response
