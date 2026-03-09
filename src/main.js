@@ -377,17 +377,22 @@ notesToggleBtn.addEventListener('click', () => {
 // --- Infinite canvas: drag to pan ---
 
 const previewPane = document.getElementById('preview-pane')
-let panX = 0, panY = 0
+let panX = 0, panY = 0, zoom = 1
 let isDragging = false
 let dragStartX, dragStartY, panStartX, panStartY
 
+const MIN_ZOOM = 0.1
+const MAX_ZOOM = 5
+const ZOOM_SENSITIVITY = 0.002
+
 function applyTransform() {
-  preview.style.transform = `translate(${panX}px, ${panY}px)`
+  preview.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`
 }
 
 function centerDiagram() {
   const svg = preview.querySelector('svg')
   if (!svg) return
+  zoom = 1
   const paneRect = previewPane.getBoundingClientRect()
   const svgW = svg.getBoundingClientRect().width
   const svgH = svg.getBoundingClientRect().height
@@ -419,6 +424,24 @@ document.addEventListener('mouseup', () => {
   isDragging = false
   previewPane.style.cursor = ''
 })
+
+// --- Scroll wheel zoom (anchored to cursor) ---
+
+previewPane.addEventListener('wheel', (e) => {
+  e.preventDefault()
+  const rect = previewPane.getBoundingClientRect()
+  const cursorX = e.clientX - rect.left
+  const cursorY = e.clientY - rect.top
+
+  const prevZoom = zoom
+  zoom *= 1 - e.deltaY * ZOOM_SENSITIVITY
+  zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom))
+
+  const ratio = zoom / prevZoom
+  panX = cursorX - ratio * (cursorX - panX)
+  panY = cursorY - ratio * (cursorY - panY)
+  applyTransform()
+}, { passive: false })
 
 // --- Init ---
 
