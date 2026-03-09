@@ -7,9 +7,12 @@ A live Mermaid diagram editor and viewer powered by [beautiful-mermaid](https://
 ## Features
 
 - Live preview as you type
-- 15 built-in themes (Tokyo Night, Catppuccin, Nord, Dracula, etc.)
+- **Infinite canvas** — drag to pan, scroll wheel to zoom (cursor-anchored)
+- 15 themes from beautiful-mermaid with adaptive light/dark UI
 - URL-based sharing — diagram is compressed and encoded in the URL hash
 - **Notes panel** — embed text notes alongside diagrams using Mermaid comments
+- Resizable and collapsible editor pane
+- Mobile responsive
 - No backend required — everything runs client-side
 
 ## Example
