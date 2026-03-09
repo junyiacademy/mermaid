@@ -11,6 +11,7 @@ A live Mermaid diagram editor and viewer powered by [beautiful-mermaid](https://
 - **Infinite canvas** — drag to pan, scroll wheel to zoom (cursor-anchored)
 - 15 themes from beautiful-mermaid with adaptive light/dark UI
 - URL-based sharing — diagram is compressed and encoded in the URL hash
+- **Node annotations** — click any node to add a short comment; annotations persist in shared URLs
 - **Notes panel** — embed text notes alongside diagrams using Mermaid comments
 - Resizable and collapsible editor pane
 - Mobile responsive
@@ -52,6 +53,21 @@ graph TD
 ```
 
 The viewer extracts the notes block, renders it as formatted text in a collapsible panel below the diagram, and passes the remaining code to the Mermaid renderer. Notes support basic markdown: headers (`##`), bullet lists (`-`), bold (`**text**`), inline code (`` `code` ``), tables, and code blocks.
+
+## Node Annotations
+
+Click any node in the SVG preview to add a short annotation. Annotated nodes display an accent-colored dot badge and show the annotation text on hover.
+
+Annotations are stored as Mermaid comments at the top of the source:
+
+```
+%% @ann A: This is a note about the Start node
+%% @ann B: Decision point — check if valid
+graph TD
+    A[Start] --> B{Decision}
+```
+
+Annotations are stripped before rendering so they don't affect the diagram. They persist in shared URLs, making it easy to annotate a diagram, share the link, and have recipients see your per-node notes.
 
 ## Sharing Diagrams
 

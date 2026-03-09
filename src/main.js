@@ -11,9 +11,16 @@ const downloadSvgBtn = document.getElementById('download-svg-btn')
 const copyAsciiBtn = document.getElementById('copy-ascii-btn')
 const notesPanel = document.getElementById('notes-panel')
 const notesContent = document.getElementById('notes-content')
-
+const annotationPopover = document.getElementById('annotation-popover')
+const annotationInput = document.getElementById('annotation-input')
+const annotationSaveBtn = document.getElementById('annotation-save')
+const annotationDeleteBtn = document.getElementById('annotation-delete')
+const annotationTooltip = document.getElementById('annotation-tooltip')
+const annotationHeader = annotationPopover.querySelector('.annotation-popover-header')
 
 let renderMode = 'svg' // 'svg' or 'ascii'
+let currentAnnotations = new Map()
+let activePopoverNodeId = null
 
 const DEFAULT_THEME = 'github-light'
 
@@ -136,6 +143,102 @@ function extractNotes(code) {
   return { diagramCode, notes: rawNotes }
 }
 
+// --- Annotation extraction / injection ---
+
+function extractAnnotations(code) {
+  const annotations = new Map()
+  const regex = /^%% @ann (\S+): (.+)$/gm
+  let match
+  while ((match = regex.exec(code)) !== null) {
+    annotations.set(match[1], match[2])
+  }
+  const cleanCode = code.replace(/^%% @ann \S+: .+\n?/gm, '').replace(/^\n+/, '')
+  return { annotations, cleanCode }
+}
+
+function injectAnnotations(code, annotations) {
+  // Strip existing annotation lines
+  let cleaned = code.replace(/^%% @ann \S+: .+\n?/gm, '').replace(/^\n+/, '')
+  if (annotations.size === 0) return cleaned
+  // Prepend annotation lines
+  const lines = []
+  for (const [nodeId, text] of annotations) {
+    lines.push(`%% @ann ${nodeId}: ${text}`)
+  }
+  return lines.join('\n') + '\n' + cleaned
+}
+
+function applyAnnotationBadges(annotations) {
+  const svg = preview.querySelector('svg')
+  if (!svg) return
+  const nodes = svg.querySelectorAll('.node, .subgraph')
+  nodes.forEach(node => {
+    const nodeId = node.getAttribute('data-id') || node.id
+    if (!nodeId) return
+    // Remove existing badges
+    node.querySelectorAll('.annotation-badge').forEach(b => b.remove())
+    node.removeAttribute('data-annotation')
+    if (annotations.has(nodeId)) {
+      node.setAttribute('data-annotation', annotations.get(nodeId))
+      // Add circle badge at top-right of node bounding box
+      const bbox = node.getBBox()
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+      circle.setAttribute('cx', bbox.x + bbox.width - 2)
+      circle.setAttribute('cy', bbox.y + 4)
+      circle.setAttribute('r', 5)
+      circle.setAttribute('fill', 'var(--accent, #7aa2f7)')
+      circle.setAttribute('stroke', 'white')
+      circle.setAttribute('stroke-width', '1.5')
+      circle.classList.add('annotation-badge')
+      node.appendChild(circle)
+    }
+  })
+}
+
+function showPopover(nodeId, rect) {
+  activePopoverNodeId = nodeId
+  const text = currentAnnotations.get(nodeId) || ''
+  annotationHeader.textContent = `Node: ${nodeId}`
+  annotationInput.value = text
+  annotationDeleteBtn.hidden = !text
+  annotationPopover.hidden = false
+
+  // Position popover above the node (desktop only — mobile uses fixed bottom sheet)
+  if (window.innerWidth > 768) {
+    const paneRect = previewPane.getBoundingClientRect()
+    let left = rect.left + rect.width / 2 - paneRect.left - 130
+    let top = rect.top - paneRect.top - 120
+    // Keep within bounds
+    left = Math.max(8, Math.min(paneRect.width - 268, left))
+    if (top < 8) top = rect.bottom - paneRect.top + 8
+    annotationPopover.style.left = left + 'px'
+    annotationPopover.style.top = top + 'px'
+  } else {
+    annotationPopover.style.left = ''
+    annotationPopover.style.top = ''
+  }
+
+  setTimeout(() => annotationInput.focus(), 0)
+}
+
+function hidePopover() {
+  annotationPopover.hidden = true
+  activePopoverNodeId = null
+}
+
+function saveAnnotation(nodeId, text) {
+  text = text.trim()
+  if (text) {
+    currentAnnotations.set(nodeId, text)
+  } else {
+    currentAnnotations.delete(nodeId)
+  }
+  editor.value = injectAnnotations(editor.value, currentAnnotations)
+  updateHash(editor.value, currentThemeName)
+  render()
+  hidePopover()
+}
+
 // --- Simple markdown to HTML ---
 // Security: escapeHtml() runs on all raw text BEFORE any tag insertion.
 // Only whitelisted tags (h2, p, ul, li, table, tr, th, td, strong, code, pre) are produced.
@@ -256,12 +359,15 @@ function render() {
     return
   }
 
-  const { diagramCode, notes } = extractNotes(code)
+  const { diagramCode: codeAfterNotes, notes } = extractNotes(code)
   displayNotes(notes)
+
+  const { annotations, cleanCode } = extractAnnotations(codeAfterNotes)
+  currentAnnotations = annotations
 
   try {
     if (renderMode === 'ascii') {
-      const ascii = renderMermaidASCII(diagramCode, { colorMode: 'none' })
+      const ascii = renderMermaidASCII(cleanCode, { colorMode: 'none' })
       const pre = document.createElement('pre')
       pre.className = 'ascii-output'
       pre.textContent = ascii
@@ -270,12 +376,15 @@ function render() {
       centerDiagram()
     } else {
       const theme = THEMES[currentThemeName]
-      const svg = renderMermaidSVG(diagramCode, { ...theme, transparent: true })
+      const svg = renderMermaidSVG(cleanCode, { ...theme, transparent: true })
+      // Safe: renderMermaidSVG returns structured SVG from parsed Mermaid AST,
+      // not raw user input. The library handles sanitization internally.
       const container = document.createElement('div')
       container.innerHTML = svg
       preview.replaceChildren(...container.childNodes)
       errorEl.hidden = true
       centerDiagram()
+      applyAnnotationBadges(annotations)
     }
   } catch (err) {
     preview.replaceChildren()
@@ -540,7 +649,7 @@ function centerDiagram() {
 }
 
 previewPane.addEventListener('mousedown', (e) => {
-  if (e.target.closest('a, button, select, textarea')) return
+  if (e.target.closest('a, button, select, textarea, input, .annotation-popover')) return
   isDragging = true
   dragStartX = e.clientX
   dragStartY = e.clientY
@@ -557,10 +666,31 @@ document.addEventListener('mousemove', (e) => {
   applyTransform()
 })
 
-document.addEventListener('mouseup', () => {
+document.addEventListener('mouseup', (e) => {
   if (!isDragging) return
+  const totalMove = Math.abs(e.clientX - dragStartX) + Math.abs(e.clientY - dragStartY)
   isDragging = false
   previewPane.style.cursor = ''
+
+  // Click (not pan): check if a node was clicked
+  if (totalMove < 5) {
+    const target = e.target.closest('.node, .subgraph')
+    if (target) {
+      const nodeId = target.getAttribute('data-id') || target.id
+      if (nodeId) {
+        const rect = target.getBoundingClientRect()
+        showPopover(nodeId, rect)
+        return
+      }
+    }
+    // Clicked empty space — dismiss popover
+    if (!e.target.closest('.annotation-popover')) {
+      hidePopover()
+    }
+  } else {
+    // Panning — dismiss popover
+    hidePopover()
+  }
 })
 
 // --- Scroll wheel zoom (anchored to cursor) ---
@@ -580,6 +710,93 @@ previewPane.addEventListener('wheel', (e) => {
   panY = cursorY - ratio * (cursorY - panY)
   applyTransform()
 }, { passive: false })
+
+// --- Annotation popover actions ---
+
+annotationSaveBtn.addEventListener('click', () => {
+  if (activePopoverNodeId) saveAnnotation(activePopoverNodeId, annotationInput.value)
+})
+
+annotationDeleteBtn.addEventListener('click', () => {
+  if (activePopoverNodeId) saveAnnotation(activePopoverNodeId, '')
+})
+
+annotationInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault()
+    if (activePopoverNodeId) saveAnnotation(activePopoverNodeId, annotationInput.value)
+  }
+  if (e.key === 'Escape') {
+    hidePopover()
+  }
+  e.stopPropagation()
+})
+
+// Prevent popover interactions from bubbling to pan handler
+annotationPopover.addEventListener('mousedown', (e) => e.stopPropagation())
+
+// Escape to dismiss popover
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !annotationPopover.hidden) hidePopover()
+})
+
+// --- Annotation tooltip on hover ---
+
+previewPane.addEventListener('mousemove', (e) => {
+  if (isDragging) {
+    annotationTooltip.hidden = true
+    return
+  }
+  const node = e.target.closest('.node[data-annotation], .subgraph[data-annotation]')
+  if (node) {
+    const text = node.getAttribute('data-annotation')
+    annotationTooltip.textContent = text
+    annotationTooltip.hidden = false
+    const paneRect = previewPane.getBoundingClientRect()
+    annotationTooltip.style.left = (e.clientX - paneRect.left + 12) + 'px'
+    annotationTooltip.style.top = (e.clientY - paneRect.top - 30) + 'px'
+  } else {
+    annotationTooltip.hidden = true
+  }
+})
+
+previewPane.addEventListener('mouseleave', () => {
+  annotationTooltip.hidden = true
+})
+
+// --- Touch support for node click ---
+
+let touchStartX, touchStartY
+previewPane.addEventListener('touchstart', (e) => {
+  if (e.target.closest('.annotation-popover')) return
+  if (e.touches.length === 1) {
+    touchStartX = e.touches[0].clientX
+    touchStartY = e.touches[0].clientY
+  }
+}, { passive: true })
+
+previewPane.addEventListener('touchend', (e) => {
+  if (e.target.closest('.annotation-popover')) return
+  if (touchStartX == null) return
+  const touch = e.changedTouches[0]
+  const totalMove = Math.abs(touch.clientX - touchStartX) + Math.abs(touch.clientY - touchStartY)
+  touchStartX = null
+  touchStartY = null
+  if (totalMove < 10) {
+    const target = document.elementFromPoint(touch.clientX, touch.clientY)
+    const node = target && target.closest('.node, .subgraph')
+    if (node) {
+      const nodeId = node.getAttribute('data-id') || node.id
+      if (nodeId) {
+        showPopover(nodeId, node.getBoundingClientRect())
+        return
+      }
+    }
+    if (!target || !target.closest('.annotation-popover')) {
+      hidePopover()
+    }
+  }
+})
 
 // --- Init ---
 

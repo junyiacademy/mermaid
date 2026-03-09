@@ -491,6 +491,105 @@ textarea::placeholder {
   opacity: 1;
 }
 
+/* --- Annotation Badges --- */
+
+.annotation-badge {
+  cursor: pointer;
+  pointer-events: all;
+}
+
+/* --- Annotation Popover --- */
+
+.annotation-popover {
+  position: absolute;
+  z-index: 100;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  padding: 12px;
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.annotation-popover[hidden] {
+  display: none;
+}
+
+.annotation-popover-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg);
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.annotation-popover input[type="text"] {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 13px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.annotation-popover input[type="text"]:focus {
+  border-color: var(--accent);
+}
+
+.annotation-popover-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.annotation-popover-actions button {
+  flex: 1;
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: 5px;
+}
+
+#annotation-delete {
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+
+#annotation-delete:hover {
+  border-color: #f7768e;
+  color: #f7768e;
+}
+
+/* --- Annotation Tooltip --- */
+
+.annotation-tooltip {
+  position: absolute;
+  z-index: 99;
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  max-width: 240px;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.annotation-tooltip[hidden] {
+  display: none;
+}
+
 @media (max-width: 768px) {
   header {
     flex-wrap: wrap;
@@ -606,5 +705,23 @@ textarea::placeholder {
   .notes-content {
     padding: 12px 14px;
     font-size: 13px;
+  }
+
+  /* Annotation popover → bottom sheet on mobile */
+  .annotation-popover {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    width: 100%;
+    border-radius: 14px 14px 0 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+    animation: slide-up 0.2s ease-out;
+  }
+
+  @keyframes slide-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
   }
 }

@@ -39,6 +39,15 @@
         <div class="preview-pane" id="preview-pane">
           <div id="preview"></div>
           <div id="error" class="error" hidden></div>
+          <div id="annotation-popover" class="annotation-popover" hidden>
+            <div class="annotation-popover-header"></div>
+            <input type="text" id="annotation-input" maxlength="200" placeholder="Add annotation...">
+            <div class="annotation-popover-actions">
+              <button id="annotation-save">Save</button>
+              <button id="annotation-delete">Delete</button>
+            </div>
+          </div>
+          <div id="annotation-tooltip" class="annotation-tooltip" hidden></div>
         </div>
         <div class="notes-panel" id="notes-panel" hidden>
           <div class="notes-edge" id="notes-edge" title="Drag to resize, click to toggle">
