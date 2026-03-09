@@ -240,6 +240,35 @@ resizeHandle.addEventListener('mousedown', (e) => {
   document.addEventListener('mouseup', onMouseUp)
 })
 
+// --- Drag to pan preview ---
+
+const previewPane = document.querySelector('.preview-pane')
+let isDragging = false
+let dragStartX, dragStartY, scrollStartX, scrollStartY
+
+previewPane.addEventListener('mousedown', (e) => {
+  if (e.target.closest('a, button, select, textarea')) return
+  isDragging = true
+  dragStartX = e.clientX
+  dragStartY = e.clientY
+  scrollStartX = previewPane.scrollLeft
+  scrollStartY = previewPane.scrollTop
+  previewPane.style.cursor = 'grabbing'
+  e.preventDefault()
+})
+
+document.addEventListener('mousemove', (e) => {
+  if (!isDragging) return
+  previewPane.scrollLeft = scrollStartX - (e.clientX - dragStartX)
+  previewPane.scrollTop = scrollStartY - (e.clientY - dragStartY)
+})
+
+document.addEventListener('mouseup', () => {
+  if (!isDragging) return
+  isDragging = false
+  previewPane.style.cursor = ''
+})
+
 // --- Init ---
 
 const state = loadFromHash()

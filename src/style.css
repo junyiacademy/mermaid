@@ -173,6 +173,11 @@ textarea::placeholder {
   flex: 1;
   overflow: auto;
   padding: 20px;
+  cursor: grab;
+}
+
+.preview-pane:active {
+  cursor: grabbing;
 }
 
 #preview {
