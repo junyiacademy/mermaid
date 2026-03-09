@@ -17,7 +17,7 @@ A live Mermaid diagram editor and viewer powered by [beautiful-mermaid](https://
 
 ## Example
 
-[Click here to see a live diagram](https://junyiacademy.github.io/mermaid/#c=eJxNjk0OgjAYRPee4rsAV9BIi2z8SRAWpumikQk2QottiSbi3S114yznTV6mc2q8Uc1XFLMVjYejCo8JPkjKsjXlgvVqakHnu-57mXZ5IuxdwsCpAOJadU4Nm0_CbMHzBX4mLpjDsjjADUq3xGyLn4QnSSEKc40dBUtNtf-hIqGdOI0wpA3lzj7jMflnP9qZSlHjFeJdP1rjIb8fyzyR) — a flowchart showing how a Claude skill generates and opens a Mermaid diagram:
+[Click here to see a live diagram with notes](https://junyiacademy.github.io/mermaid/#c=eJxVUdGO0zAQfO9XjHTKW_MLcDQtx-l6gEIrhKI-mHraWNfaweuqnDD_jmwnuuIXe3dmVzOeqsK9dYEyqyrc3eGTu-Ix4LvzL7lVYyv0EFotUPD8daEEBIfQE81JXTTx7cWcToW96QlJJTT3RlNw7Rl6-jRypKVXgVDQRh29OpehxwNeKXOYgL2nChQ805-V0dg7zTlo0y2JEBwUtu16DmU13ECb28ZmQT-9uwr9rKpGP098RePOg7O0ITuKbzUiWnciYu7Xb2d8x5F_4xIRX73bU4SCS_qa6UtG8iS8cZqIWBaf0DwYa4JxdiJu2zVW2ZcfNfmyNfmaDB-ch_TKG3ssc_e0ui6BzY5eDT02yxkAfOhyUG1Rs0Ndv8Oiu5W-y7xFRpo_D1MWo8L3fzPcJDj-oEQsuyaH8Z-lsmSZl6y6oj9lsm3XBVpl6GP3ZaBNqSxKIrub7Z9dxEO34e-AljI4K9z9A0q1yms) — a flowchart with notes panel showing how a Claude skill generates and opens a Mermaid diagram:
 
 ```mermaid
 graph TD
