@@ -275,7 +275,10 @@ function render() {
     }
   } catch (err) {
     preview.replaceChildren()
-    errorEl.textContent = err.message
+    const msg = renderMode === 'ascii'
+      ? 'ASCII rendering failed — diagram may be too complex. Try SVG mode.'
+      : (err.message || String(err))
+    errorEl.textContent = msg
     errorEl.hidden = false
   }
 }
@@ -294,7 +297,8 @@ editor.addEventListener('input', () => {
 renderModeBtn.addEventListener('click', () => {
   renderMode = renderMode === 'svg' ? 'ascii' : 'svg'
   renderModeBtn.textContent = renderMode.toUpperCase()
-  render()
+  // Defer render so button text updates before potentially heavy ASCII render
+  setTimeout(render, 0)
 })
 
 themeSelect.addEventListener('change', () => {
@@ -409,14 +413,14 @@ function applyTransform() {
 }
 
 function centerDiagram() {
-  const svg = preview.querySelector('svg')
-  if (!svg) return
+  const content = preview.firstElementChild
+  if (!content) return
   zoom = 1
+  applyTransform()
   const paneRect = previewPane.getBoundingClientRect()
-  const svgW = svg.getBoundingClientRect().width
-  const svgH = svg.getBoundingClientRect().height
-  panX = (paneRect.width - svgW) / 2
-  panY = (paneRect.height - svgH) / 2
+  const contentRect = content.getBoundingClientRect()
+  panX = (paneRect.width - contentRect.width) / 2
+  panY = (paneRect.height - contentRect.height) / 2
   applyTransform()
 }
 
