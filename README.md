@@ -54,21 +54,34 @@ The viewer extracts the notes block, renders it as formatted text in a collapsib
 
 ## Sharing Diagrams
 
-The Mermaid source is compressed (pako deflate) and base64url-encoded into the URL hash. Open a shared link and the diagram renders immediately.
+The Mermaid source is zlib-compressed and base64url-encoded into the URL hash. Open a shared link and the diagram renders immediately.
 
 ### Generate a share URL programmatically
 
+**Node.js:**
+
 ```js
-const pako = require('pako')
+const zlib = require('zlib')
 
 function encodeMermaid(code) {
-  const compressed = pako.deflate(new TextEncoder().encode(code))
-  const base64 = btoa(String.fromCharCode(...compressed))
+  const compressed = zlib.deflateSync(code)
+  const base64 = compressed.toString('base64')
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/, '')
   return `https://junyiacademy.github.io/mermaid/#c=${base64}`
 }
+```
+
+**Python:**
+
+```python
+import zlib, base64
+
+def encode_mermaid(code: str) -> str:
+    compressed = zlib.compress(code.encode())
+    b64 = base64.urlsafe_b64encode(compressed).rstrip(b"=").decode()
+    return f"https://junyiacademy.github.io/mermaid/#c={b64}"
 ```
 
 ### Open from terminal (macOS)
